@@ -1,0 +1,8 @@
+{
+  "title": "EPFO Buddy (Groq)",
+  "placeholder": "Ask your EPFO query...",
+  "ask": "Ask",
+  "answer": "Answer",
+  "loading": "Loading...",
+  "error": "Error"
+}
