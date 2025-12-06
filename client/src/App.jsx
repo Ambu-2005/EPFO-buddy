@@ -23,19 +23,6 @@ import Alert from "@mui/material/Alert";
 
 
 const API_BASE = import.meta.env.VITE_API_URL || "";
-```
-
-### 2. (Optional) Create .env for Local Development
-
-Create a file `client/.env` (if you want to test locally):
-```
-VITE_API_URL=http://localhost:3001
-```
-
-Add to your `.gitignore`:
-```
-*.env
-.env
 
 export default function App() {
   const theme = useTheme();
