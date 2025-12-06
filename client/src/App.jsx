@@ -10,6 +10,7 @@ import {
   IconButton,
   Tooltip,
   useTheme,
+  Grid,
 } from "@mui/material";
 import CloseIcon from '@mui/icons-material/Close';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
@@ -100,62 +101,36 @@ export default function App() {
     }
   };
 
- // const startVoiceInput = () => {
- //   if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
- //     alert("Speech Recognition API not supported in this browser");
- //     return;
- //   }
- //   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
- //   const recognition = new SpeechRecognition();
- //   recognition.lang = language === "hi" ? "hi-IN" : "en-IN";
- //   recognition.interimResults = false;
- //   recognition.maxAlternatives = 1;
-
-//    recognition.onstart = () => setIsRecording(true);
-//    recognition.onend = () => setIsRecording(false);
-//    recognition.onerror = (event) => {
-//      setIsRecording(false);
- //     alert("Speech recognition error: " + event.error);
-//    };
-//    recognition.onresult = (event) => {
-//      const text = event.results[0][0].transcript;
-//      setQuestion(text);
-//      askQuestionWithText(text);
-//    };
-//
-//    recognition.start();
-//  };
-
-const onClearInput = () => setQuestion("");
-const startVoiceInput = () => {
-  if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
-    alert("Speech Recognition API not supported in this browser");
-    return;
-  }
+  const onClearInput = () => setQuestion("");
   
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  const recognition = new SpeechRecognition();
-  
-  recognition.lang = language === "hi" ? "hi-IN" : "en-IN";
-  recognition.interimResults = false;
-  recognition.maxAlternatives = 1;
-  
-  recognition.onstart = () => setIsRecording(true);
-  recognition.onend = () => setIsRecording(false);
-  recognition.onerror = (event) => {
-    setIsRecording(false);
-    alert("Speech recognition error: " + event.error);
+  const startVoiceInput = () => {
+    if (!("webkitSpeechRecognition" in window || "SpeechRecognition" in window)) {
+      alert("Speech Recognition API not supported in this browser");
+      return;
+    }
+    
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    
+    recognition.lang = language === "hi" ? "hi-IN" : "en-IN";
+    recognition.interimResults = false;
+    recognition.maxAlternatives = 1;
+    
+    recognition.onstart = () => setIsRecording(true);
+    recognition.onend = () => setIsRecording(false);
+    recognition.onerror = (event) => {
+      setIsRecording(false);
+      alert("Speech recognition error: " + event.error);
+    };
+    
+    recognition.onresult = (event) => {
+      const text = event.results[0][0].transcript;
+      setQuestion(text);
+      askQuestionWithText(text);
+    };
+    
+    recognition.start();
   };
-  
-  recognition.onresult = (event) => {
-    const text = event.results[0][0].transcript;
-    setQuestion(text);
-    askQuestionWithText(text); // your existing function to send query to backend
-  };
-  
-  recognition.start();
-};
-
 
   const copyAnswer = () => {
     navigator.clipboard.writeText(answer);
@@ -170,207 +145,282 @@ const startVoiceInput = () => {
   };
 
   const uploadImage = async () => {
-  if (!imageFile) {
-    setUploadError("Please select an image file.");
-    return;
-  }
-  setLoading(true);
-  setAnswer("");
-  setError("");
-  setUploadError("");
-  try {
-    const formData = new FormData();
-    formData.append("image", imageFile);
-
-    const res = await fetch(`${API_BASE}/ask-image`, {
-      method: "POST",
-      body: formData,
-    });
-
-    if (!res.ok) {
-      const errorData = await res.json();
-      throw new Error(errorData.error || "Image analysis failed");
+    if (!imageFile) {
+      setUploadError("Please select an image file.");
+      return;
     }
+    setLoading(true);
+    setAnswer("");
+    setError("");
+    setUploadError("");
+    try {
+      const formData = new FormData();
+      formData.append("image", imageFile);
 
-    const data = await res.json();
-    setAnswer(data.answer);
-    const newEntry = { question: "[Passbook Image Upload]", answer: data.answer, timestamp: new Date().toISOString() };
-    setHistory([newEntry, ...history]);
-    requestAnimationFrame(() => answerRef.current?.scrollIntoView({ behavior: "smooth" }));
-  } catch (err) {
-    setUploadError(err.message);
-  } finally {
-    setLoading(false);
-    setImageFile(null);
-  }
-};
+      const res = await fetch(`${API_BASE}/ask-image`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!res.ok) {
+        const errorData = await res.json();
+        throw new Error(errorData.error || "Image analysis failed");
+      }
+
+      const data = await res.json();
+      setAnswer(data.answer);
+      const newEntry = { question: "[Passbook Image Upload]", answer: data.answer, timestamp: new Date().toISOString() };
+      setHistory([newEntry, ...history]);
+      requestAnimationFrame(() => answerRef.current?.scrollIntoView({ behavior: "smooth" }));
+    } catch (err) {
+      setUploadError(err.message);
+    } finally {
+      setLoading(false);
+      setImageFile(null);
+    }
+  };
 
   return (
-    <Container
-      maxWidth="sm"
+    <Box
       sx={{
         minHeight: "100vh",
         bgcolor: darkMode ? "#121212" : "#f5f5f5",
         color: darkMode ? "white" : "black",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        py: 6,
-        px: 3,
+        py: 4,
+        px: { xs: 2, sm: 3, md: 4 },
       }}
     >
-      <Box
-        component={Paper}
-        elevation={10}
-        sx={{ p: 4, borderRadius: "20px", boxShadow: theme.shadows[8] }}
-      >
-        <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
-          <Typography variant="h4" fontWeight="bold" sx={{ userSelect: "none" }}>
-            📌 {t("title")}
-          </Typography>
-          <Box display="flex" alignItems="center" gap={1}>
-            <select
-              value={language}
-              onChange={(e) => setLanguage(e.target.value)}
-              style={{ padding: "6px", borderRadius: "6px" }}
-            >
-              <option value="en">EN</option>
-              <option value="hi">HI</option>
-            </select>
-            <Switch checked={darkMode} onChange={() => setDarkMode(!darkMode)} />
-          </Box>
-        </Box>
-
-        {/* Voice + Text input */}
-        <Box display="flex" alignItems="center" gap={1} mb={2}>
-          <TextField
-            label={t("placeholder")}
-            multiline
-            rows={4}
-            variant="outlined"
-            fullWidth
-            value={question}
-            onChange={(e) => setQuestion(e.target.value)}
-            disabled={loading}
-          />
-          <IconButton
-            color={isRecording ? "error" : "primary"}
-            onClick={startVoiceInput}
-            disabled={loading}
-            title={isRecording ? "Listening..." : "Start Voice Input"}
-          >
-            {isRecording ? <MicOffIcon /> : <MicIcon />}
-          </IconButton>
-          {question && !loading && (
-            <IconButton aria-label="Clear input" onClick={onClearInput} size="small">
-              <CloseIcon fontSize="small" />
-            </IconButton>
-          )}
-        </Box>
-
-        <Button
-          variant="contained"
-          onClick={askQuestion}
-          disabled={loading || !question.trim()}
-          fullWidth
-          sx={{
-            mb: 2,
-            py: 1.5,
-            fontWeight: "bold",
-            fontSize: "1.1rem",
-            backgroundColor: loading ? theme.palette.action.disabled : theme.palette.primary.main,
-            "&:hover": {
-              backgroundColor: loading ? theme.palette.action.disabled : theme.palette.primary.dark,
-            },
-          }}
-        >
-          {loading ? <CircularProgress size={26} color="inherit" /> : t("ask").toUpperCase()}
-        </Button>
-
-        {/* Image upload */}
-        <Box my={2} display="flex" alignItems="center" gap={2}>
-          <Button variant="outlined" component="label" disabled={loading}>
-            Upload Passbook Image
-            <input type="file" accept="image/*" hidden onChange={onImageChange} />
-          </Button>
-          <Button variant="contained" disabled={loading || !imageFile} onClick={uploadImage}>
-            Analyze Image
-          </Button>
-        </Box>
-        {uploadError && (
-          <Alert severity="error" sx={{ mt: 1 }}>
-            {uploadError}
-          </Alert>
-        )}
-
-        {error && (
-          <Alert severity="error" sx={{ mt: 1, mb: 2, borderRadius: "8px" }}>
-            {error}
-          </Alert>
-        )}
-
-        {answer && (
-          <Paper
-            elevation={2}
-            sx={{
-              p: 3,
-              borderRadius: "12px",
-              whiteSpace: "pre-wrap",
-              position: "relative",
-              transition: "opacity 0.3s ease-in-out",
-              opacity: answer ? 1 : 0,
-            }}
-            ref={answerRef}
-          >
-            <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
-              <Typography variant="h6">{t("answer")}</Typography>
-              <Tooltip title="Copy answer">
-                <IconButton onClick={copyAnswer} size="small" color="primary">
-                  <ContentCopyIcon />
-                </IconButton>
-              </Tooltip>
-            </Box>
-            <ReactMarkdown>{answer}</ReactMarkdown>
-          </Paper>
-        )}
-
-        {history.length > 0 && (
-          <>
-            <Typography variant="h6" mt={4} mb={2} userSelect="none">
-              History
-            </Typography>
+      <Container maxWidth="xl">
+        <Grid container spacing={3}>
+          {/* Main Chat Area - Left Side on Desktop */}
+          <Grid item xs={12} lg={8}>
             <Box
-              sx={{
-                maxHeight: "220px",
-                overflowY: "auto",
-                px: 1,
+              component={Paper}
+              elevation={10}
+              sx={{ 
+                p: { xs: 3, sm: 4 }, 
+                borderRadius: "20px", 
+                boxShadow: theme.shadows[8],
+                height: "100%",
               }}
             >
-              {history.map(({ question, answer, timestamp }, idx) => (
+              {/* Header */}
+              <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+                <Typography variant="h4" fontWeight="bold" sx={{ userSelect: "none" }}>
+                  📌 {t("title")}
+                </Typography>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <select
+                    value={language}
+                    onChange={(e) => setLanguage(e.target.value)}
+                    style={{ padding: "6px", borderRadius: "6px" }}
+                  >
+                    <option value="en">EN</option>
+                    <option value="hi">HI</option>
+                  </select>
+                  <Switch checked={darkMode} onChange={() => setDarkMode(!darkMode)} />
+                </Box>
+              </Box>
+
+              {/* Voice + Text input */}
+              <Box display="flex" alignItems="center" gap={1} mb={2}>
+                <TextField
+                  label={t("placeholder")}
+                  multiline
+                  rows={4}
+                  variant="outlined"
+                  fullWidth
+                  value={question}
+                  onChange={(e) => setQuestion(e.target.value)}
+                  disabled={loading}
+                />
+                <Box display="flex" flexDirection="column" gap={1}>
+                  <IconButton
+                    color={isRecording ? "error" : "primary"}
+                    onClick={startVoiceInput}
+                    disabled={loading}
+                    title={isRecording ? "Listening..." : "Start Voice Input"}
+                  >
+                    {isRecording ? <MicOffIcon /> : <MicIcon />}
+                  </IconButton>
+                  {question && !loading && (
+                    <IconButton aria-label="Clear input" onClick={onClearInput} size="small">
+                      <CloseIcon fontSize="small" />
+                    </IconButton>
+                  )}
+                </Box>
+              </Box>
+
+              <Button
+                variant="contained"
+                onClick={askQuestion}
+                disabled={loading || !question.trim()}
+                fullWidth
+                sx={{
+                  mb: 2,
+                  py: 1.5,
+                  fontWeight: "bold",
+                  fontSize: "1.1rem",
+                  backgroundColor: loading ? theme.palette.action.disabled : theme.palette.primary.main,
+                  "&:hover": {
+                    backgroundColor: loading ? theme.palette.action.disabled : theme.palette.primary.dark,
+                  },
+                }}
+              >
+                {loading ? <CircularProgress size={26} color="inherit" /> : t("ask").toUpperCase()}
+              </Button>
+
+              {/* Image upload */}
+              <Box my={2} display="flex" flexDirection={{ xs: "column", sm: "row" }} alignItems="stretch" gap={2}>
+                <Button 
+                  variant="outlined" 
+                  component="label" 
+                  disabled={loading}
+                  fullWidth
+                  sx={{ py: 1.5 }}
+                >
+                  Upload Passbook Image
+                  <input type="file" accept="image/*" hidden onChange={onImageChange} />
+                </Button>
+                <Button 
+                  variant="contained" 
+                  disabled={loading || !imageFile} 
+                  onClick={uploadImage}
+                  fullWidth
+                  sx={{ py: 1.5 }}
+                >
+                  Analyze Image
+                </Button>
+              </Box>
+              
+              {imageFile && (
+                <Alert severity="info" sx={{ mt: 1 }}>
+                  Selected: {imageFile.name}
+                </Alert>
+              )}
+              
+              {uploadError && (
+                <Alert severity="error" sx={{ mt: 1 }}>
+                  {uploadError}
+                </Alert>
+              )}
+
+              {error && (
+                <Alert severity="error" sx={{ mt: 1, mb: 2, borderRadius: "8px" }}>
+                  {error}
+                </Alert>
+              )}
+
+              {/* Answer Display */}
+              {answer && (
                 <Paper
-                  key={idx}
-                  elevation={0}
+                  elevation={2}
                   sx={{
-                    p: 2,
-                    mb: 1,
-                    bgcolor: darkMode ? "#242424" : "#fafafa",
-                    borderRadius: "10px",
-                    border: darkMode ? "1px solid #444" : "1px solid #eee",
+                    p: 3,
+                    mt: 3,
+                    borderRadius: "12px",
+                    whiteSpace: "pre-wrap",
+                    position: "relative",
+                    transition: "opacity 0.3s ease-in-out",
+                    opacity: answer ? 1 : 0,
+                  }}
+                  ref={answerRef}
+                >
+                  <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                    <Typography variant="h6">{t("answer")}</Typography>
+                    <Tooltip title="Copy answer">
+                      <IconButton onClick={copyAnswer} size="small" color="primary">
+                        <ContentCopyIcon />
+                      </IconButton>
+                    </Tooltip>
+                  </Box>
+                  <ReactMarkdown>{answer}</ReactMarkdown>
+                </Paper>
+              )}
+            </Box>
+          </Grid>
+
+          {/* History Sidebar - Right Side on Desktop */}
+          <Grid item xs={12} lg={4}>
+            <Box
+              component={Paper}
+              elevation={10}
+              sx={{ 
+                p: { xs: 3, sm: 4 }, 
+                borderRadius: "20px", 
+                boxShadow: theme.shadows[8],
+                height: { xs: "auto", lg: "calc(100vh - 100px)" },
+                display: "flex",
+                flexDirection: "column",
+              }}
+            >
+              <Typography variant="h5" mb={3} fontWeight="bold" userSelect="none">
+                📜 History
+              </Typography>
+              
+              {history.length === 0 ? (
+                <Box 
+                  display="flex" 
+                  alignItems="center" 
+                  justifyContent="center" 
+                  flexGrow={1}
+                  sx={{ opacity: 0.5 }}
+                >
+                  <Typography variant="body1" textAlign="center">
+                    No history yet. Ask a question to get started!
+                  </Typography>
+                </Box>
+              ) : (
+                <Box
+                  sx={{
+                    flexGrow: 1,
+                    overflowY: "auto",
+                    pr: 1,
                   }}
                 >
-                  <Typography fontWeight="bold" gutterBottom>
-                    Q: {question}
-                  </Typography>
-                  <Typography sx={{ whiteSpace: "pre-wrap", mb: 1, fontSize: "0.95rem" }}>{answer}</Typography>
-                  <Typography variant="caption" color="text.secondary" userSelect="none">
-                    {new Date(timestamp).toLocaleString()}
-                  </Typography>
-                </Paper>
-              ))}
+                  {history.map(({ question, answer, timestamp }, idx) => (
+                    <Paper
+                      key={idx}
+                      elevation={0}
+                      sx={{
+                        p: 2,
+                        mb: 2,
+                        bgcolor: darkMode ? "#242424" : "#fafafa",
+                        borderRadius: "10px",
+                        border: darkMode ? "1px solid #444" : "1px solid #eee",
+                        transition: "transform 0.2s, box-shadow 0.2s",
+                        "&:hover": {
+                          transform: "translateY(-2px)",
+                          boxShadow: theme.shadows[4],
+                        },
+                      }}
+                    >
+                      <Typography fontWeight="bold" gutterBottom color="primary">
+                        Q: {question}
+                      </Typography>
+                      <Typography 
+                        sx={{ 
+                          whiteSpace: "pre-wrap", 
+                          mb: 1, 
+                          fontSize: "0.95rem",
+                          maxHeight: "100px",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                        }}
+                      >
+                        {answer.length > 200 ? answer.substring(0, 200) + "..." : answer}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary" userSelect="none">
+                        {new Date(timestamp).toLocaleString()}
+                      </Typography>
+                    </Paper>
+                  ))}
+                </Box>
+              )}
             </Box>
-          </>
-        )}
-      </Box>
-    </Container>
+          </Grid>
+        </Grid>
+      </Container>
+    </Box>
   );
 }
