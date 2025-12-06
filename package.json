@@ -1,0 +1,17 @@
+{
+  "name": "epfo-buddy",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "EPFO Buddy - Full Stack Application",
+  "scripts": {
+    "install-client": "cd client && npm install",
+    "install-server": "cd server && npm install",
+    "build-client": "cd client && npm run build",
+    "start": "cd server && npm start",
+    "dev-client": "cd client && npm run dev",
+    "dev-server": "cd server && npm run dev"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
